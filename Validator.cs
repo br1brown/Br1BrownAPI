@@ -3,7 +3,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 
 namespace Br1BrownAPI {
-	static class Validator {
+	public static class Validator {
 
 		public static string CombineURL(params string[] Element) {
 			for (int i = 0; i < Element.Length; i++)
