@@ -16,7 +16,7 @@ namespace Br1BrownAPI {
 		}
 
 		public static List<string> URL(string URL) {
-			return TXT(new StreamReader(new WebClient().OpenRead(URL));
+			return TXT(new StreamReader(new WebClient().OpenRead(URL)));
 		}
 
 		public static List<string> TXT(StreamReader stream) {

@@ -129,8 +129,8 @@ namespace Br1BrownAPI {
 			FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 
 			Stream responseStream = response.GetResponseStream();
-			StreamReaderer = new StreamReader(responseStream);
-			var cartelle =er.ReadToEnd().Replace("\r", "").Split('\n');
+			StreamReader reader = new StreamReader(responseStream);
+			var cartelle = reader.ReadToEnd().Replace("\r", "").Split('\n');
 
 			reader.Close();
 			response.Close();
