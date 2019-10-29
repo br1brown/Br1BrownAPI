@@ -42,7 +42,7 @@ namespace Br1BrownAPI {
 
 			folder = ManageString.TrimStart(folder, MAINFOLDER);
 
-			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(Validator.CombineURL(MAINFOLDER + folder));
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(Validator.CombineURL(MAINFOLDER, folder));
 			request.Credentials = NETCREDENTIAL;
 
 			request.Method = method;
@@ -101,7 +101,7 @@ namespace Br1BrownAPI {
 			CreateDir(cartella);
 			using (WebClient client = new WebClient()) {
 				client.Credentials = NETCREDENTIAL;
-				client.UploadFile(MAINFOLDER + path, WebRequestMethods.Ftp.UploadFile, local);
+				client.UploadFile(Validator.CombineURL(MAINFOLDER , path), WebRequestMethods.Ftp.UploadFile, local);
 			}
 		}
 
@@ -112,6 +112,16 @@ namespace Br1BrownAPI {
 			using (Stream fileStream = File.Create(local)) {
 				ftpStream.CopyTo(fileStream);
 			}
+		}
+
+		public Stream DownloadStream(string path) {
+			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
+			return request.GetResponse().GetResponseStream();
+		}
+
+		public List<string> DownloadROWS(string path) {
+			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
+			return Read.TXT(new StreamReader(request.GetResponse().GetResponseStream()));
 		}
 
 		public bool Delete(string filep) {
