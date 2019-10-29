@@ -4,6 +4,14 @@ using System.Text.RegularExpressions;
 
 namespace Br1BrownAPI {
 	static class Validator {
+
+		public static string CombineURL(params string[] Element) {
+			for (int i = 0; i < Element.Length; i++)
+				Element[i] = Element[i].TrimEnd('/', '\\');
+
+			return string.Join("/", Element);
+		}
+
 		public static bool EMAIL(string email) {
 			try {
 				if (string.IsNullOrEmpty(email))

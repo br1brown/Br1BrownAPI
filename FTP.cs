@@ -6,92 +6,6 @@ using System.Net;
 
 namespace Br1BrownAPI {
 
-	public class ItemFTP {
-
-		protected string CalcPath(params string []Element) {
-			for (int i = 0; i < Element.Length; i++)
-				Element[i] = Element[i].TrimEnd('/', '\\');
-
-			return string.Join("/", Element);
-		}
-
-		public Folder_FTP Parent {
-			get {
-				var spl = _Path.Split('/');
-				List<string> newP = new List<string>();
-				for (int i = 0; i < spl.Length - 1; i++)
-					newP.Add( spl[i]);
-				return new Folder_FTP(cl, CalcPath(newP.ToArray()));
-			}
-		}
-
-		public string Name { get { return _Path.Split('/').Last(); } }
-
-		public string Position { get { return new Uri(new Uri(cl.MAINFOLDER), _Path).AbsoluteUri; } }
-
-		internal FTPClient cl;
-		internal string _Path;
-
-		internal ItemFTP(FTPClient _cl, string sub) {
-			cl = _cl;
-			_Path = sub;
-		}
-
-		public override string ToString() {
-			return Name;
-		}
-	}
-
-	public class Client_FTP {
-		FTPClient cl;
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="FTP_FOLDER">ftp://ftp.domain.org/</param>
-		/// <param name="FTP_User"></param>
-		/// <param name="FTP_Pwd"></param>
-		public Client_FTP(string FTP_FOLDER, string FTP_User, string FTP_Pwd) {
-			cl = new FTPClient(FTP_FOLDER, FTP_User, FTP_Pwd);
-		}
-
-		public Folder_FTP ROOT { get { return new Folder_FTP(cl, ""); } }
-
-	}
-
-	public class Folder_FTP : ItemFTP {
-
-		public List<Folder_FTP> Folders {
-			get {
-				var ret = new List<Folder_FTP>();
-				foreach (var c in cl.AllContents(_Path))
-					if (!cl.IsFile(c))
-						ret.Add(new Folder_FTP(cl, CalcPath(_Path, c)));
-				return ret;
-			}
-		}
-		public List<File_FTP> Files {
-			get {
-				var ret = new List<File_FTP>();
-				foreach (var c in cl.AllContents(_Path))
-					if (cl.IsFile(c))
-						ret.Add(new File_FTP(cl, CalcPath (_Path , c)));
-				return ret;
-			}
-		}
-
-		internal Folder_FTP(FTPClient _cl, string sub) : base(_cl, sub) { }
-	}
-
-
-	public class File_FTP : ItemFTP {
-
-		public void Download(string localPath) {
-			cl.Download(_Path, localPath);
-		}
-
-		internal File_FTP(FTPClient _cl, string sub) : base(_cl, sub) { }
-	}
-
 	public class FTPClient {
 
 		public string MAINFOLDER { get; private set; }
@@ -99,26 +13,39 @@ namespace Br1BrownAPI {
 		private NetworkCredential NETCREDENTIAL { get { return new NetworkCredential(User, Pwd); } }
 
 		public FTPClient(string FTP_FOLDER, string FTP_User, string FTP_Pwd) {
+			FTP_FOLDER = FTP_FOLDER.TrimEnd('/', '\\');
+			FTP_FOLDER += "/";
+			FTP_FOLDER = ManageString.TrimStart(FTP_FOLDER, "ftp://");
+			FTP_FOLDER = ManageString.TrimStart(FTP_FOLDER, "ftp.");
+			FTP_FOLDER = "ftp://ftp." + FTP_FOLDER;
 			MAINFOLDER = FTP_FOLDER;
 			User = FTP_User;
 			Pwd = FTP_Pwd;
 		}
 
-		public bool IsFile(string requestUrl) {
+		public bool IsFile(string ftpPath) {
 
-			var ftpWebRequest = GetRequest(WebRequestMethods.Ftp.GetFileSize, requestUrl);
+			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.GetFileSize, ftpPath);
 
-			try { return ((FtpWebResponse)ftpWebRequest.GetResponse()).ContentLength != default(long); }
-			catch (Exception) { return false; }
+			try {
+				using (var response = (FtpWebResponse)request.GetResponse())
+				using (var responseStream = response.GetResponseStream()) {
+					return true;
+				}
+			}
+			catch (WebException ex) {
+				return Path.HasExtension(ftpPath);
+			}
 		}
 
-
 		private FtpWebRequest GetRequest(string method, string folder = "") {
-			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(MAINFOLDER + folder);
+
+			folder = ManageString.TrimStart(folder, MAINFOLDER);
+
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(Validator.CombineURL(MAINFOLDER + folder));
 			request.Credentials = NETCREDENTIAL;
 
-			if (!string.IsNullOrEmpty(method))
-				request.Method = method;
+			request.Method = method;
 
 			return request;
 		}
