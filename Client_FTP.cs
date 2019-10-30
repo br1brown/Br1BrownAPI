@@ -20,6 +20,9 @@ namespace Br1BrownAPI {
 
 		public string Name { get { return _Path.Split('/').Last(); } }
 
+		/// <summary>
+		/// All url of item
+		/// </summary>
 		public string Position { get { return new Uri(new Uri(cl.MAINFOLDER), _Path).AbsoluteUri; } }
 
 		internal FTPClient cl;
@@ -51,6 +54,9 @@ namespace Br1BrownAPI {
 
 	}
 
+	/// <summary>
+	/// Instance of Folder FTP
+	/// </summary>
 	public class Folder_FTP : ItemFTP {
 
 		public List<Folder_FTP> Folders {
@@ -74,7 +80,9 @@ namespace Br1BrownAPI {
 
 		internal Folder_FTP(FTPClient _cl, string sub) : base(_cl, sub) { }
 	}
-
+	/// <summary>
+	/// Instance of File FTP
+	/// </summary>
 	public class File_FTP : ItemFTP {
 
 		public void Download(string localPath) {

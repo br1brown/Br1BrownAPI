@@ -41,6 +41,9 @@ namespace Br1BrownAPI {
 
 	public static class Utils {
 
+		/// <summary>
+		/// if you can connect on net
+		/// </summary>
 		public static bool IS_ON_NET {
 			get {
 				{
@@ -58,6 +61,10 @@ namespace Br1BrownAPI {
 		}
 
 		public static class User {
+
+			/// <summary>
+			/// Get username
+			/// </summary>
 			public static string Name {
 				get {
 					string userName = "";

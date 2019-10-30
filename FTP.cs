@@ -22,7 +22,11 @@ namespace Br1BrownAPI {
 			User = FTP_User;
 			Pwd = FTP_Pwd;
 		}
-
+		/// <summary>
+		/// if path is of file
+		/// </summary>
+		/// <param name="ftpPath"></param>
+		/// <returns></returns>
 		public bool IsFile(string ftpPath) {
 
 			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.GetFileSize, ftpPath);
@@ -50,6 +54,11 @@ namespace Br1BrownAPI {
 			return request;
 		}
 
+		/// <summary>
+		/// Get list of al content in a folder 
+		/// </summary>
+		/// <param name="sub"></param>
+		/// <returns></returns>
 		public List<string> AllContents(string sub = "") {
 			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.ListDirectory, sub);
 
@@ -65,6 +74,10 @@ namespace Br1BrownAPI {
 			return cartelle.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
 		}
 
+		/// <summary>
+		/// Create directory
+		/// </summary>
+		/// <param name="pathToCreate"></param>
 		public void CreateDir(string pathToCreate) {
 			FtpWebRequest reqFTP = null;
 			Stream ftpStream = null;
@@ -96,6 +109,11 @@ namespace Br1BrownAPI {
 			}
 		}
 
+		/// <summary>
+		/// Upload file
+		/// </summary>
+		/// <param name="local"></param>
+		/// <param name="path"></param>
 		public void Upload(string local, string path) {
 			var cartella = Path.GetDirectoryName(path).Replace("\\", "/");
 			CreateDir(cartella);
@@ -105,6 +123,11 @@ namespace Br1BrownAPI {
 			}
 		}
 
+		/// <summary>
+		/// Download file
+		/// </summary>
+		/// <param name="path"></param>
+		/// <param name="local"></param>
 		public void Download(string path, string local) {
 			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
 
@@ -114,16 +137,31 @@ namespace Br1BrownAPI {
 			}
 		}
 
+		/// <summary>
+		/// Download Stream
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
 		public Stream DownloadStream(string path) {
 			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
 			return request.GetResponse().GetResponseStream();
 		}
 
+		/// <summary>
+		/// Download all rows of file
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
 		public List<string> DownloadROWS(string path) {
 			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
 			return Read.TXT(new StreamReader(request.GetResponse().GetResponseStream()));
 		}
 
+		/// <summary>
+		/// Delete
+		/// </summary>
+		/// <param name="filep"></param>
+		/// <returns></returns>
 		public bool Delete(string filep) {
 			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DeleteFile, filep);
 

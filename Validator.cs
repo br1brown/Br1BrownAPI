@@ -4,7 +4,11 @@ using System.Text.RegularExpressions;
 
 namespace Br1BrownAPI {
 	public static class Validator {
-
+		/// <summary>
+		/// Path.Combine() with URL
+		/// </summary>
+		/// <param name="Element"></param>
+		/// <returns></returns>
 		public static string CombineURL(params string[] Element) {
 			for (int i = 0; i < Element.Length; i++)
 				Element[i] = Element[i].TrimEnd('/', '\\');
@@ -12,6 +16,11 @@ namespace Br1BrownAPI {
 			return string.Join("/", Element);
 		}
 
+		/// <summary>
+		/// Validate MAIL
+		/// </summary>
+		/// <param name="email"></param>
+		/// <returns></returns>
 		public static bool EMAIL(string email) {
 			try {
 				if (string.IsNullOrEmpty(email))
@@ -25,6 +34,11 @@ namespace Br1BrownAPI {
 			}
 		}
 
+		/// <summary>
+		/// Validate URL
+		/// </summary>
+		/// <param name="url"></param>
+		/// <returns></returns>
 		public static bool URL(string url) {
 			return new Regex
 				(@"^(http|https|ftp|)\://|[a-zA-Z0-9\-\.]+\.[a-zA-Z](:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*[^\.\,\)\(\s]$",
@@ -32,8 +46,13 @@ namespace Br1BrownAPI {
 				.IsMatch(url);
 		}
 
+		/// <summary>
+		/// if url exist
+		/// </summary>
+		/// <param name="url"></param>
+		/// <returns></returns>
 		public static bool URLExists(string url) {
-			if (!Validator.URL(url))
+			if (!URL(url))
 				return false;
 			try {
 				WebRequest webRequest = System.Net.WebRequest.Create(url);
@@ -53,6 +72,11 @@ namespace Br1BrownAPI {
 			}
 		}
 
+		/// <summary>
+		/// if path is local file
+		/// </summary>
+		/// <param name="_file"></param>
+		/// <returns></returns>
 		public static bool IsLocalFile(string _file) {
 			return new Uri(_file).IsFile;
 		}
