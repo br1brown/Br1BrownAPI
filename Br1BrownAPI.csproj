@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client_FTP.cs" />
+    <Compile Include="MailClient.cs" />
     <Compile Include="OUT.cs" />
     <Compile Include="FTP.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
