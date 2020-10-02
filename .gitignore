@@ -4,4 +4,6 @@
 
 /.vs
 /obj/Debug
-/bin/Debug
+/obj/Debug
+/bin
+/obj
