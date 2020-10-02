@@ -52,7 +52,7 @@ namespace Br1BrownAPI {
 		/// <param name="stream"></param>
 		/// <returns></returns>
 		public static List<string> TXT(StreamReader stream) {
-			return stream.ReadToEnd().Replace("\r", "").Split(new[] { "\n" }, StringSplitOptions.None).ToList();
+			return stream.ReadToEnd().Replace("\r", "").Split('\n').ToList();
 		}
 	}
 }

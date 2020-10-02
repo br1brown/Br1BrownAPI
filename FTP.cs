@@ -8,17 +8,77 @@ namespace Br1BrownAPI {
 
 	public class FTPClient {
 
+		public class FTPPath {
+
+			/// <summary>
+			/// TrimStart
+			/// </summary>
+			/// <param name="target"></param>
+			/// <param name="trimString"></param>
+			/// <returns></returns>
+			public static string TrimStart(string target, params string[] trimString) {
+				string result = target;
+				foreach (var tString in trimString)
+					if (!string.IsNullOrEmpty(tString)) {
+						while (result.StartsWith(tString)) {
+							result = result.Substring(tString.Length);
+						}
+					}
+				return result;
+			}
+
+			/// <summary>
+			/// TrimEnd
+			/// </summary>
+			/// <param name="target"></param>
+			/// <param name="trimString"></param>
+			/// <returns></returns>
+			public static string TrimEnd(string target, params string[] trimString) {
+				string result = target;
+				foreach (var tString in trimString)
+					if (!string.IsNullOrEmpty(tString)) {
+						while (result.EndsWith(tString)) {
+							result = result.Substring(0, result.Length - tString.Length);
+						}
+					}
+				return result;
+			}
+
+			/// <summary>
+			/// Parti del percorso
+			/// </summary>
+			public List<string> Vals { set; get; }
+
+			public static implicit operator FTPPath(string input) {
+				return new FTPPath(input);
+			}
+
+			public static implicit operator FTPPath(string[] input) {
+				return new FTPPath() { Vals = input.ToList() };
+			}
+
+			public static implicit operator string(FTPPath input) {
+				return string.Join("/", input.Vals.Where(rr => !string.IsNullOrWhiteSpace(rr)));
+			}
+
+			public FTPPath() {
+				Vals = new List<string>();
+			}
+
+			public FTPPath(string Path) {
+				Vals = Path.Split('\\', '/').Where(rr => !string.IsNullOrWhiteSpace(rr)).ToList();
+			}
+		}
+
 		public string MAINFOLDER { get; private set; }
 		private string User, Pwd;
 		private NetworkCredential NETCREDENTIAL { get { return new NetworkCredential(User, Pwd); } }
 
-		public FTPClient(string FTP_FOLDER, string FTP_User, string FTP_Pwd) {
-			FTP_FOLDER = FTP_FOLDER.TrimEnd('/', '\\');
+		public FTPClient(FTPPath FTP_FOLDER, string FTP_User, string FTP_Pwd) {
+			FTP_FOLDER = ((string)FTP_FOLDER).TrimEnd('/', '\\');
 			FTP_FOLDER += "/";
-			FTP_FOLDER = ManageString.TrimStart(FTP_FOLDER, "ftp://");
-			FTP_FOLDER = ManageString.TrimStart(FTP_FOLDER, "ftp.");
-			FTP_FOLDER = "ftp://ftp." + FTP_FOLDER;
-			MAINFOLDER = FTP_FOLDER;
+			FTP_FOLDER = FTPPath.TrimStart(FTP_FOLDER, "ftp://", "ftp.");
+			MAINFOLDER = "ftp://ftp." + FTP_FOLDER;
 			User = FTP_User;
 			Pwd = FTP_Pwd;
 		}
@@ -36,15 +96,14 @@ namespace Br1BrownAPI {
 				using (var responseStream = response.GetResponseStream()) {
 					return true;
 				}
-			}
-			catch (WebException ex) {
+			} catch (WebException ex) {
 				return Path.HasExtension(ftpPath);
 			}
 		}
 
 		private FtpWebRequest GetRequest(string method, string folder = "") {
 
-			folder = ManageString.TrimStart(folder, MAINFOLDER);
+			folder = FTPPath.TrimStart(folder, MAINFOLDER);
 
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(Validator.CombineURL(MAINFOLDER, folder));
 			request.Credentials = NETCREDENTIAL;
@@ -59,38 +118,48 @@ namespace Br1BrownAPI {
 		/// </summary>
 		/// <param name="sub"></param>
 		/// <returns></returns>
-		public List<string> AllContents(string sub = "") {
-			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.ListDirectory, sub);
+		public List<string> AllContents(params string[] Listpaths) {
+			FTPPath paths = (Listpaths);
+			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.ListDirectory, paths);
+			try {
+				var res = new List<string>();
+				FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 
-			FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+				Stream responseStream = response.GetResponseStream();
+				StreamReader reader = new StreamReader(responseStream);
+				var tuttiassieme = reader.ReadToEnd();
+				var cartelle = tuttiassieme.Split('\r', '\n').Where(rr => !string.IsNullOrWhiteSpace(rr));
+				foreach (var item in cartelle) {
+					var path = item.Split('/', '\\').LastOrDefault();
+					if (path != null && path.Replace(".", "").Count() > 0)
+						res.Add(path);
 
-			Stream responseStream = response.GetResponseStream();
-			StreamReader reader = new StreamReader(responseStream);
-			var cartelle = reader.ReadToEnd().Replace("\r", "").Split('\n');
 
-			reader.Close();
-			response.Close();
+				}
+				reader.Close();
+				response.Close();
 
-			return cartelle.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+				return res;
+			} catch {
+				return null;
+			}
 		}
 
 		/// <summary>
 		/// Create directory
 		/// </summary>
 		/// <param name="pathToCreate"></param>
-		public void CreateDir(string pathToCreate) {
+		public void CreateDir(FTPPath pathToCreate) {
 			FtpWebRequest reqFTP = null;
 			Stream ftpStream = null;
 
-			string[] subDirs = pathToCreate.Split('/');
+			FTPPath currentDir = new FTPPath();
 
-			string currentDir = "";
-
-			foreach (string subDir in subDirs) {
+			foreach (string subDir in pathToCreate.Vals) {
 
 				try {
 					if (currentDir != "")
-						currentDir = currentDir + "/" + subDir;
+						currentDir.Vals.Add(subDir);
 					else
 						currentDir = subDir;
 
@@ -101,8 +170,7 @@ namespace Br1BrownAPI {
 					ftpStream = response.GetResponseStream();
 					ftpStream.Close();
 					response.Close();
-				}
-				catch {
+				} catch {
 
 				}
 				currentDir += "/";
@@ -114,12 +182,12 @@ namespace Br1BrownAPI {
 		/// </summary>
 		/// <param name="local"></param>
 		/// <param name="path"></param>
-		public void Upload(string local, string path) {
-			var cartella = Path.GetDirectoryName(path).Replace("\\", "/");
+		public void Upload(string local, FTPPath path) {
+			var cartella = Path.GetDirectoryName(path);
 			CreateDir(cartella);
 			using (WebClient client = new WebClient()) {
 				client.Credentials = NETCREDENTIAL;
-				client.UploadFile(Validator.CombineURL(MAINFOLDER , path), WebRequestMethods.Ftp.UploadFile, local);
+				client.UploadFile(Validator.CombineURL(MAINFOLDER, path), WebRequestMethods.Ftp.UploadFile, local);
 			}
 		}
 
@@ -128,7 +196,7 @@ namespace Br1BrownAPI {
 		/// </summary>
 		/// <param name="path"></param>
 		/// <param name="local"></param>
-		public void Download(string path, string local) {
+		public void Download(FTPPath path, string local) {
 			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
 
 			using (Stream ftpStream = request.GetResponse().GetResponseStream())
@@ -153,8 +221,7 @@ namespace Br1BrownAPI {
 		/// <param name="path"></param>
 		/// <returns></returns>
 		public List<string> DownloadROWS(string path) {
-			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
-			return Read.TXT(new StreamReader(request.GetResponse().GetResponseStream()));
+			return Read.TXT(new StreamReader(DownloadStream(path)));
 		}
 
 		/// <summary>
@@ -162,15 +229,29 @@ namespace Br1BrownAPI {
 		/// </summary>
 		/// <param name="filep"></param>
 		/// <returns></returns>
-		public bool Delete(string filep) {
+		public bool Delete(FTPPath filep) {
 			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DeleteFile, filep);
 
 			try {
 				using (FtpWebResponse response = (FtpWebResponse)request.GetResponse()) {
 					return response.StatusDescription.StartsWith("250 ");
 				}
-			}
-			catch { return false; }
+			} catch { return false; }
+		}
+
+		/// <summary>
+		/// Delete
+		/// </summary>
+		/// <param name="filep"></param>
+		/// <returns></returns>
+		public bool DeleteDIR(FTPPath filep) {
+			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.RemoveDirectory, filep);
+
+			try {
+				using (FtpWebResponse response = (FtpWebResponse)request.GetResponse()) {
+					return response.StatusDescription.StartsWith("250 ");
+				}
+			} catch { return false; }
 		}
 	}
 }
