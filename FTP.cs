@@ -211,8 +211,12 @@ namespace Br1BrownAPI {
 		/// <param name="path"></param>
 		/// <returns></returns>
 		public Stream DownloadStream(string path) {
-			FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
-			return request.GetResponse().GetResponseStream();
+			try {
+				FtpWebRequest request = GetRequest(WebRequestMethods.Ftp.DownloadFile, path);
+				return request.GetResponse().GetResponseStream();
+			} catch {
+				return null;
+			}
 		}
 
 		/// <summary>
@@ -221,7 +225,10 @@ namespace Br1BrownAPI {
 		/// <param name="path"></param>
 		/// <returns></returns>
 		public List<string> DownloadROWS(string path) {
-			return Read.TXT(new StreamReader(DownloadStream(path)));
+			var ss = DownloadStream(path);
+			if (ss == null)
+				return new List<string>();
+			return Read.TXT(new StreamReader(ss));
 		}
 
 		/// <summary>
