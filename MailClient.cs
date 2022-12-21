@@ -3,7 +3,7 @@ using System.Text;
 using System.Net.Mail;
 
 
-namespace Br1BrownAPI {
+namespace Br1BrownAPI.Mail {
 	public class MailClient {
 
 		private SmtpClient client;

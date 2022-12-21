@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 
-namespace Br1BrownAPI {
+namespace Br1BrownAPI.Out {
 	public static class Read {
 
 		/// <summary>
@@ -14,7 +14,7 @@ namespace Br1BrownAPI {
 		/// <param name="_Path">URL or LocalFile</param>
 		/// <returns></returns>
 		public static List<string> GenericPATH(string _Path) {
-			if (Validator.IsLocalFile(_Path))
+			if (Validator.Validator.IsLocalFile(_Path))
 				return TXT(_Path);
 			else
 				return URL(_Path);
@@ -41,7 +41,7 @@ namespace Br1BrownAPI {
 		/// <param name="URL"></param>
 		/// <returns></returns>
 		public static List<string> URL(string URL) {
-			if (Utils.IS_ON_NET && Validator.URLExists(URL))
+			if (Utils.IS_ON_NET && Validator.Validator.URLExists(URL))
 				return TXT(new StreamReader(new WebClient().OpenRead(URL)));
 			return null;
 		}
